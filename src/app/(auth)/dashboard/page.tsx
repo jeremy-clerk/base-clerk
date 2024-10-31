@@ -1,9 +1,9 @@
-import { auth, clerkClient, currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 export default async function DashboardIndex() {
-  const { orgId, userId, sessionClaims } = await auth();
+  const { orgId, sessionClaims } = await auth();
 
   //need to set the session claims in the Clerk dashboard if you want to use it this way.
   return (

@@ -5,10 +5,9 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function JoinOrg() {
-  const { isLoaded, setActive, userInvitations, userSuggestions } =
-    useOrganizationList({
-      userInvitations: true,
-    });
+  const { isLoaded, setActive, userInvitations } = useOrganizationList({
+    userInvitations: true,
+  });
   const { session } = useSession();
   const router = useRouter();
 
