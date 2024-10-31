@@ -1,51 +1,22 @@
-import {NextRequest, NextResponse} from 'next/server'
-import { clerkMiddleware } from '@clerk/nextjs/server'
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
-export default clerkMiddleware((auth, request) => {
-  return applyCsp(request)
-})
+const isPublicRoute = createRouteMatcher(["/sign-in(.*)", "/sign-up(.*)", "/"]);
 
-function applyCsp(request: NextRequest) {
-  // create a randomly generated nonce value
-  const nonce = Buffer.from(crypto.randomUUID()).toString('base64')
+export default clerkMiddleware(async (auth, request) => {
+  const { orgId, userId } = await auth();
+  if (!isPublicRoute(request)) await auth.protect();
 
-  // format the CSP header
-  const cspHeader = `
-    default-src 'self';
-    script-src 'self' 'strict-dynamic' 'nonce-${nonce}' https: http: ${
-      process.env.NODE_ENV === 'production' ? '' : `'unsafe-eval'`
-  };
-    connect-src 'self' https://moral-kit-16.clerk.accounts.dev;
-    img-src 'self' https://img.clerk.com;
-    worker-src 'self' blob:;
-    style-src 'self' 'unsafe-inline';
-    frame-src 'self' https://challenges.cloudflare.com;
-    form-action 'self';
-  `
-  // Replace newline characters and spaces
-  const contentSecurityPolicyHeaderValue = cspHeader.replace(/\s{2,}/g, ' ').trim()
-
-  // set the nonce and csp values in the request headers
-  const requestHeaders = new Headers(request.headers)
-  requestHeaders.set('x-nonce', nonce)
-  requestHeaders.set('Content-Security-Policy', contentSecurityPolicyHeaderValue)
-
-  const response = NextResponse.next({
-    request: {
-      headers: requestHeaders,
-    },
-  })
-
-  response.headers.set('Content-Security-Policy', contentSecurityPolicyHeaderValue)
-
-  return response
-}
+  if (userId && !orgId && request.nextUrl.pathname !== "/org/join") {
+    return NextResponse.redirect(new URL("/org/join", request.url));
+  }
+});
 
 export const config = {
   matcher: [
     // Skip Next.js internals and all static files, unless found in search params
-    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
     // Always run for API routes
-    '/(api|trpc)(.*)',
+    "/(api|trpc)(.*)",
   ],
-}
+};
