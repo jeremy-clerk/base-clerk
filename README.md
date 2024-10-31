@@ -1,4 +1,4 @@
-# Auto Accept Org Suggestions
+# Auto Accept Org Invitations
 ## Setup
 ### First Steps
 - Enable 'Verified Domains' in the [Clerk Dashboard](https://dashboard.clerk.com/last-active?path=organizations-settings)
